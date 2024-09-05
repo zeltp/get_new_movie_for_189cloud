@@ -18,7 +18,7 @@ PyMySQL == 1.0.2</br>
 
 然后直接运行即可</br>
 
-<core> python3 update_movie.py</core>
+<code> python3 update_movie.py</code>
 
 ### 添加要更新的剧集
 
