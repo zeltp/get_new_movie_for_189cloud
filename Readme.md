@@ -10,10 +10,14 @@
 
 
 ### 测试运行环境：
-Python == 3.6.8
+Python == 3.6.8</br>
+
 selenium == 3.141.0</br>
+
 numpy == 1.19.5</br>
+
 cn2an == 0.5.22</br>
+
 PyMySQL == 1.0.2</br>
 
 ### 使用方法</br>
