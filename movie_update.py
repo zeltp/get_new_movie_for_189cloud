@@ -184,13 +184,13 @@ def openchrome():
     print("初始化浏览器")
     options = webdriver.ChromeOptions()
     #options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
+    #options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--remote-debugging-port=9222')
+    #options.add_argument('--disable-gpu')
+    #options.add_argument('--remote-debugging-port=9222')
     options.add_argument('--blink-settings=imagesEnabled=false')
     options.add_argument('--single-process')
-    options.add_argument('--window-size=1920,1080')
+    #options.add_argument('--window-size=1920,1080')
     options.add_experimental_option('excludeSwitches', ['enable-automation'])
     options.add_experimental_option('useAutomationExtension', False)
     #创建浏览器对象,并打开更新地址
@@ -247,7 +247,6 @@ def get_bilibili_latest_episodes () :
         return False
     url_episodeslist = chrome.find_elements_by_xpath(xpath)
     url_have_episodes = len(url_episodeslist)
-    url_episodes_new_list = []
     for i in range(url_have_episodes):
         rule = re.compile("(\d{1,3})\\n(.*)")
         grep_result = rule.search(url_episodeslist[url_have_episodes -i -1 ].text)
@@ -273,6 +272,7 @@ def get_youku_latest_episodes():
     pointer = chrome.find_element_by_xpath(xpath)
     rule = re.compile("更新至(\d{1,3})")
     grep_result = rule.search(pointer.text)
+
     if grep_result != None:
         num = int(grep_result.group(1))
         global movie_latest_episodes
@@ -288,7 +288,7 @@ def get_youku_latest_episodes():
             last_update_date = now_date
             update_interval = 1
         else:
-            last_update_date = get_update_date(1)
+            last_update_date = get_update_date(2)
             update_interval = 7
         return num
     else :
@@ -300,18 +300,25 @@ def get_iqiyi_latest_episodes():
     if wait_xhr_finnish(xpath) == False:
         print("错误:未能获取最新集数,可能是网络波动等问题")
         return False
-    choose_url(xpath)
+    choose_url(xpath,2)
     xpath = '//*[@id="intro_bk"]/div/div/div/div/div[1]/div[2]/div[3]'
     if wait_xhr_finnish(xpath) == False:
         print("错误:未能获取最新集数,可能是网络波动等问题")
         return False
     pointer = chrome.find_element_by_xpath(xpath)
-    rule = re.compile("更新至(\d{1,3})集")
+    rule = re.compile("更新至(\d{1,3})集.*")
     grep_result = rule.search(pointer.text)
-    if grep_result != None:
-        num = int(re.sub("\D", "", grep_result.group(1)))
-    else :
-        print(f"错误：未找到最新集数，网站为爱奇艺")
+    for i in range(6) :
+        grep_result = rule.search(pointer.text)
+        if grep_result != None:
+            num = int(grep_result.group(1))
+            break
+        else:
+            if i + 1 == 6 :
+                print(f"错误：未找到最新集数，网站为爱奇艺")
+                return False
+            else :
+                time.sleep(0.5)
     global last_update_date
     last_update_date = now_date
     global movie_latest_episodes
@@ -319,12 +326,11 @@ def get_iqiyi_latest_episodes():
         global latest_episodes_end
         latest_episodes_end = True
     global update_interval
-    update_interval = 7
     if '电视剧' in chrome.title:
         last_update_date = now_date
         update_interval = 1
     else:
-        last_update_date = get_update_date(1)
+        last_update_date = now_date
         update_interval = 7
     movie_latest_episodes = num
     return num
@@ -356,6 +362,9 @@ def get_update_date(method):
     xpath = '//*[@id="app"]/div[2]/div[2]/div/div[2]/div/div/div[2]/div[1]/div[1]/div[2]/span'
     if method == 1:
         xpath = '//*[@id="app"]/div[2]/div[2]/div/div[2]/div/div/div[2]/div[1]/div[1]/div[2]/span'
+        rule = re.compile("周(.)\d")
+    elif method == 2:
+        xpath = '//*[@id="app"]/div/div[2]/div[2]/div/div/div[2]/div[1]/div[2]/div[1]/div[2]'
         rule = re.compile("周(.)\d")
     wait_xhr_finnish(xpath)
     pointer = chrome.find_element_by_xpath(xpath)
@@ -541,8 +550,8 @@ def get_save_file():
         global upload_movie_have_episodes
         upload_movie_have_episodes = url_episodes_new_list[url_episodes_new_list.index(max(url_episodes_new_list))]
     else:
-        return False
         print("未找到需要保存的文件,可能是还未更新")
+        return False
     return True
 
 def start_reprint () :
