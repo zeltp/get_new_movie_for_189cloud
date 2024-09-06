@@ -183,19 +183,30 @@ def grep_data ():
 def openchrome():
     print("初始化浏览器")
     options = webdriver.ChromeOptions()
-    #options.add_argument('--headless')
-    #options.add_argument('--no-sandbox')
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
     options.add_argument('--disable-dev-shm-usage')
-    #options.add_argument('--disable-gpu')
-    #options.add_argument('--remote-debugging-port=9222')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--remote-debugging-port=9222')
     options.add_argument('--blink-settings=imagesEnabled=false')
     options.add_argument('--single-process')
-    #options.add_argument('--window-size=1920,1080')
+    options.add_argument('--window-size=1920,1080')
     options.add_experimental_option('excludeSwitches', ['enable-automation'])
     options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument(
+        'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36')
+    options.add_argument("--disable-blink-features=AutomationControlled")
+
     #创建浏览器对象,并打开更新地址
     global chrome
     chrome = webdriver.Chrome(options=options)
+    chrome.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": """
+        Object.defineProperty(navigator, 'webdriver', {
+          get: () => undefined
+        })
+      """
+    })
 
 
 
@@ -397,8 +408,8 @@ def get_update_date(method):
 
 def update_189cloud ():
     global login_189_status
-    print("开始登录网盘")
     if login_189_status == False:
+        print("未登录网盘,开始登录")
         if  login_189_cloud() :
             login_189_status == True
         else:
@@ -430,8 +441,9 @@ def login_189_cloud () :
 
 def use_cookies_login () :
     chrome.get('https://cloud.189.cn/web/login.html')
-    if wait_xhr_finnish('//*[@id="udb_login"]') == False:
+    if wait_xhr_finnish('/html/body/div') == False:
         print("无法加载登录页面,终止全部更新0")
+        print(chrome.page_source)
         err_quit()
         return False
     cookies_list = json.loads(cloud_cookies_189)
